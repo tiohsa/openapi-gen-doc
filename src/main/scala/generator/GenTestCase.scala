@@ -1,11 +1,12 @@
 package generator
 
 import io.swagger.parser.OpenAPIParser
-import io.swagger.v3.oas.models.{OpenAPI, Operation, PathItem}
+import io.swagger.v3.oas.models.{Components, OpenAPI, Operation, PathItem}
 import io.swagger.v3.oas.models.media.{Content, MediaType, Schema}
 import io.swagger.v3.oas.models.parameters.{Parameter, RequestBody}
 import io.swagger.v3.oas.models.responses.ApiResponse
-import scala.jdk.CollectionConverters._
+
+import scala.jdk.CollectionConverters.*
 
 object GenTestCase {
   def createTitle(apiPath: String, method: String): String =
@@ -35,7 +36,7 @@ object GenTestCase {
       )
 
   def toParameterString(parameter: Parameter): String =
-    s"${parameter.getDescription}に\"${parameter.getExample}\"を設定する"
+    s"${parameter.getName}に\"${parameter.getExample}\"を設定する"
 
   def toSchemaString[T](name: String, schema: Schema[T]): String =
     s"${name}に\"${schema.getExample}\"を設定する"
@@ -63,15 +64,29 @@ object GenTestCase {
     else None
   }
 
-  def createPutSering(path: String, operation: Operation): Option[String] = {
-    println(operation)
+  def createPutSering(
+      path: String,
+      operation: Operation,
+      components: Components
+  ): Option[String] = {
     if operation == null then None
     else {
-      val result = GenTestCase
+      val parameters = GenTestCase
         .toParametersString(operation)
-        .mkString("\n")
-      println(result)
-      Some(result)
+      println(parameters)
+      val schemaRef =
+        operation.getRequestBody.getContent
+          .get("application/json")
+          .getSchema
+          .get$ref
+          .replace("#/components/schemas/", "")
+      val schema = components.getSchemas.get(schemaRef)
+      if schema.properties != null then
+        val schemas = schema.getProperties.asScala
+          .map((name, schema) => GenTestCase.toSchemaString(name, schema))
+          .toList
+        println(schemas)
+      Some("")
     }
   }
 

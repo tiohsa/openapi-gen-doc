@@ -31,7 +31,7 @@ class GenTestCaseTest extends munit.FunSuite:
     parameter.setDescription("パラメータ1")
     parameter.setExample("abc")
     val message = GenTestCase.toParameterString(parameter)
-    assertEquals(message, "パラメータ1に\"abc\"を設定する")
+    assertEquals(message, "param1に\"abc\"を設定する")
   }
 
   test("create request body string") {
@@ -56,12 +56,13 @@ class GenTestCaseTest extends munit.FunSuite:
   }
 
   test("run") {
-    val openapi = GenTestCase.read("openapi.json").get
+    val openapi = GenTestCase.read("openapi.yaml").get
     val result = openapi.getPaths.asScala
       .map((path, pathItem) => {
 //      GenTestCase.createGetSering(path, pathItem.getGet)
 //        GenTestCase.createPostSering(path, pathItem.getPost)
-        GenTestCase.createPutSering(path, pathItem.getPut)
+        GenTestCase
+          .createPutSering(path, pathItem.getPut, openapi.getComponents)
 //      GenTestCase.createDeleteSering(path, pathItem.getDelete)
       })
       .toSeq
