@@ -1,19 +1,19 @@
+package generator
+
 // For more information on writing tests, see
 // https://scalameta.org/munit/docs/getting-started.html
-import generator.GenTestCase
 import io.swagger.parser.OpenAPIParser
-import io.swagger.v3.oas.models.PathItem
-import io.swagger.v3.oas.models.Operation
+import io.swagger.v3.oas.models.{Operation, PathItem}
 import io.swagger.v3.oas.models.media.{Content, MediaType, Schema}
 import io.swagger.v3.oas.models.parameters.{Parameter, RequestBody}
-import io.swagger.v3.oas.models.responses.ApiResponse
-import io.swagger.v3.oas.models.responses.ApiResponses
-import scala.jdk.CollectionConverters._
+import io.swagger.v3.oas.models.responses.{ApiResponse, ApiResponses}
+
+import scala.jdk.CollectionConverters.*
 
 class GenTestCaseTest extends munit.FunSuite:
 
   test("create test case title") {
-    val title = GenTestCase.createTitle("path", "GET")
+    val title = GenTestCase.title("path", "GET")
     assertEquals(title, "GET pathのテスト")
   }
 
@@ -30,15 +30,15 @@ class GenTestCaseTest extends munit.FunSuite:
     parameter.setName("param1")
     parameter.setDescription("パラメータ1")
     parameter.setExample("abc")
-    val message = GenTestCase.toParameterString(parameter)
+    val message = GenTestCase.parameterString(parameter)
     assertEquals(message, "param1に\"abc\"を設定する")
   }
 
   test("create request body string") {
     val schema = new Schema()
     schema.setExample("abc")
-    val message = GenTestCase.toSchemaString("パラメータ1", schema)
-    assertEquals(message, "パラメータ1に\"abc\"を設定する")
+    val message = GenTestCase.schemaString(schema)
+    assertEquals(message, List("パラメータ1に\"abc\"を設定する"))
   }
 
   test("create execute string") {
@@ -56,15 +56,6 @@ class GenTestCaseTest extends munit.FunSuite:
   }
 
   test("run") {
-    val openapi = GenTestCase.read("openapi.yaml").get
-    val result = openapi.getPaths.asScala
-      .map((path, pathItem) => {
-//      GenTestCase.createGetSering(path, pathItem.getGet)
-//        GenTestCase.createPostSering(path, pathItem.getPost)
-        GenTestCase
-          .createPutSering(path, pathItem.getPut, openapi.getComponents)
-//      GenTestCase.createDeleteSering(path, pathItem.getDelete)
-      })
-      .toSeq
-      .mkString("\n")
+    val genTestCase = GenTestCase("openapi.yaml")
+    println(genTestCase.generate())
   }
