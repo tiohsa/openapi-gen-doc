@@ -10,7 +10,10 @@ case class TestCase(
   import TestCase.*
 
   override def toString: String = {
-    List(titleString, givenString, whenString, thenString)
+    this.responses
+      .flatMap { response =>
+        List(titleString, givenString, whenString, thenString(response))
+      }
       .mkString("\n")
   }
 
@@ -28,13 +31,9 @@ case class TestCase(
   def whenString: String =
     executionString(this.path, this.method)
 
-  def thenString: String =
-    val thenResponses = this.responses
-      .flatMap { case TestResponse(code, properties) =>
-        codeString(code) ::
-          responsesString(code, properties)
-      }
-    thenResponses.mkString("\n")
+  def thenString(response: TestResponse): String =
+    (codeString(response.code) ::
+      responsesString(response.properties)).mkString("\n") + "\n"
 
   def titleString: String =
     s"${this.method} ${this.path}のテスト"
@@ -52,13 +51,11 @@ object TestCase {
     s"ステータスコード${code}が返ること"
 
   def responsesString(
-      code: String,
       properties: List[TestProperty]
   ): List[String] =
-    codeString(code) ::
-      properties.map { case TestProperty(name, value) =>
-        responseString(name, value)
-      }
+    properties.map { case TestProperty(name, value) =>
+      responseString(name, value)
+    }
 
   def responseString(name: String, value: String): String =
     s"${name}に${value}が返ること"
