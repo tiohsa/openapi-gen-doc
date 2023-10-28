@@ -10,52 +10,55 @@ import io.swagger.v3.parser.core.models.ParseOptions
 import java.util
 import scala.jdk.CollectionConverters.*
 
+case class TestCase(
+    title: String,
+    parameters: List[String],
+    requestBody: List[String],
+    execution: String,
+    responses: List[String]
+)
+
 class GenTestCase(url: String) {
   import GenTestCase.*
   def openapi: OpenAPI = read(url).get
   def generate(): String = {
-    println(openapi)
-    openapi.getPaths.asScala
-      .foreach { (path, pathItem) =>
+//    println(openapi)
+    val result = openapi.getPaths.asScala
+      .flatMap { (path, pathItem) =>
         {
           val operation: Operation | Null = pathItem.getPut
-          println(pathString(path, "Put", operation).mkString("\n"))
+          pathString(path, "Put", operation)
         }
       }
+      .mkString("\n")
+    println(result)
     ""
   }
 }
 
 object GenTestCase {
-  def title(apiPath: String, method: String): String =
-    s"${method} ${apiPath}のテスト"
-
-  def toGetMethodString(pathItem: PathItem): Option[String] =
-    if pathItem.getGet != null then Some("GET")
-    else None
-
-  def toPostMethodString(pathItem: PathItem): Option[String] =
-    if pathItem.getPost != null then Some("Post")
-    else None
-
-  def toPutMethodString(pathItem: PathItem): Option[String] =
-    if pathItem.getPost != null then Some("Put")
-    else None
-
-  def toDeleteMethodString(pathItem: PathItem): Option[String] =
-    if pathItem.getDelete != null then Some("Delte")
-    else None
 
   def pathString(
       path: String,
       method: String,
       operation: Operation | Null
-  ): List[String] =
-    if operation == null then List()
+  ): Option[TestCase] =
+    if operation == null then None
     else
-      List(title(path, method)) ++
-        parametersString(operation.getParameters) ++
-        requestBodyString(operation.getRequestBody)
+      val title = titleString(path, method)
+      val parameters = parametersString(operation.getParameters)
+      val requestBody = requestBodyString(operation.getRequestBody)
+      val execution = executionString(path, method)
+      val responses = responsesString(operation.getResponses)
+      Some(
+        TestCase(
+          title,
+          parameters,
+          requestBody,
+          execution,
+          responses
+        )
+      )
 
   def parametersString(parameters: util.List[Parameter] | Null): List[String] =
     if parameters == null then List()
@@ -106,10 +109,29 @@ object GenTestCase {
       val str = s"${name}に\"${property.getExample}\"を設定する"
       Some(str)
 
-  def toExecuteString(path1: String, method: String): String =
-    s"${method} ${path1}を実行する"
+  def responsesString(
+      responses: util.Map[String, ApiResponse] | Null
+  ): List[String] =
+    if responses == null then List()
+    else
+      responses.asScala.toList.flatMap { (code, response) =>
+        List(resultString(code)) ++
+          responseString(response)
+      }
 
-  def toReulst(code: String, response: ApiResponse): String =
+  def responseString(
+      apiResponse: ApiResponse | Null
+  ): List[String] =
+    if apiResponse == null then List()
+    else contentString(apiResponse.getContent)
+
+  def titleString(apiPath: String, method: String): String =
+    s"${method} ${apiPath}のテスト"
+
+  def executionString(path: String, method: String): String =
+    s"${method} ${path}にデータを送信する"
+
+  def resultString(code: String): String =
     s"ステータスコード${code}が返ること"
 
   def read(url: String): Option[OpenAPI] = {
