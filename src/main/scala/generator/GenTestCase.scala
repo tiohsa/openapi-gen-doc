@@ -15,9 +15,14 @@ import io.swagger.v3.parser.core.models.ParseOptions
 import generator.models.*
 
 import java.util
+import scala.::
 import scala.jdk.CollectionConverters.*
 
-case class GenTestCase(url: String) {
+case class GenTestCase(
+    url: String,
+    codeInputValues: Map[String, Map[String, String]],
+    codeOutputValues: Map[String, Map[String, String]]
+) {
   import GenTestCase.*
 
   def read(url: String): Option[OpenAPI] = {
@@ -55,9 +60,6 @@ case class GenTestCase(url: String) {
       }
     result
   }
-}
-
-object GenTestCase {
 
   def createTestCase(
       path: String,
@@ -75,9 +77,14 @@ object GenTestCase {
           path,
           parameters,
           requestBody,
-          responses
+          responses,
+          codeInputValues,
+          codeOutputValues
         )
       )
+}
+
+object GenTestCase {
 
   def parametersOrDefault(
       parameters: util.List[Parameter] | Null,
@@ -146,7 +153,9 @@ object GenTestCase {
       properties.asScala.toList.flatMap { (name, schema) =>
         schema match {
           case x: ObjectSchema => schemaOrDefault(Some(name), x)
-          case x: ArraySchema  => schemaOrDefault(Some(name), x.getItems)
+          case x: ArraySchema =>
+            val name = getValueOrDefault(x.getName)
+            schemaOrDefault(name, x.getItems)
           case _ => {
             val schemaName = createPropertyNameofObject(propertyName, name)
             propertyOrDefault(schemaName, schema)

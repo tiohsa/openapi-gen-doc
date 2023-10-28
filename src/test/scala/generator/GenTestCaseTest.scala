@@ -56,9 +56,27 @@ class GenTestCaseTest extends munit.FunSuite:
 //  }
 //
   test("run") {
-//    val file = "openapi.yaml"
-    val file = "api-with-examples.yaml"
-    val genTestCase = GenTestCase(file)
+    val codeInputValues: Map[String, Map[String, String]] = Map(
+      "200" -> Map(
+        ("tags" -> "tags_200"),
+        ("limit" -> "limit_200")
+      ),
+      "405" -> Map(
+        ("id" -> "id_405"),
+        ("limit" -> "limit_405")
+      )
+    )
+
+    val codeOutputValues: Map[String, Map[String, String]] = Map(
+      "200" -> Map(
+        ("name" -> "name_200"),
+        ("tag" -> "tag_200"),
+        ("id" -> "id_200")
+      )
+    )
+    val file = "openapi.yaml"
+//    val file = "api-with-examples.yaml"
+    val genTestCase = GenTestCase(file, codeInputValues, codeOutputValues)
     genTestCase.generate.foreach { testCase =>
       println(s"${testCase}\n")
     }

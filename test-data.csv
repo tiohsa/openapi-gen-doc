@@ -1,0 +1,10 @@
+type,code,property,value
+input,200,tags,tags_200
+input,200,limit,limit_200
+input,200,name,name_200
+input,200,id,id_200
+input,200,status,status_200
+output,200,id_return_200
+output,200,name_return_200
+input,405,id,id_405
+input,405,limit,limit_405

@@ -8,6 +8,7 @@ lazy val root = project
     scalaVersion := scala3Version,
     libraryDependencies ++= Seq(
       "io.swagger.parser.v3" % "swagger-parser" % "2.1.16",
+      "com.github.tototoshi" %% "scala-csv" % "1.3.10",
       "org.scalameta" %% "munit" % "0.7.29" % Test
     )
   )

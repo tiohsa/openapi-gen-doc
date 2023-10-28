@@ -1,22 +1,13 @@
 package generator.models
 
-val inputValues: Map[String, String] = Map(
-  ("tags" -> "tags_value"),
-  ("limit" -> "limit_value")
-)
-
-val outputValues: Map[String, String] = Map(
-  ("name" -> "name_value"),
-  ("tag" -> "tag_value"),
-  ("id" -> "id_value")
-)
-
 case class TestCase(
     method: String,
     path: String,
     parameters: List[TestProperty],
     requestBody: List[TestProperty],
-    responses: List[TestResponse]
+    responses: List[TestResponse],
+    codeInputValues: Map[String, Map[String, String]],
+    codeOutputValues: Map[String, Map[String, String]]
 ) {
   import TestCase.*
 
@@ -28,7 +19,12 @@ case class TestCase(
       .mkString("\n")
   }
 
+  private var inputValues: Map[String, String] = Map()
+  private var outputValues: Map[String, String] = Map()
+
   def createTestCase(response: TestResponse): List[String] = {
+    inputValues = codeInputValues.getOrElse(response.code, Map())
+    outputValues = codeOutputValues.getOrElse(response.code, Map())
     List(titleString, givenString, whenString, thenString(response))
     //        if response.code == "200" then
     //          List(titleString, givenString, whenString, thenString(response))
@@ -55,13 +51,6 @@ case class TestCase(
 
   def titleString: String =
     s"${this.method} ${this.path}のテスト"
-}
-
-object TestCase {
-
-  def parameterString(name: String, value: String): String =
-    val input = inputValues.getOrElse(name, value)
-    s"${name}に\"${input}\"を設定する"
 
   def executionString(path: String, method: String): String =
     s"${method} ${path}にデータを送信する"
@@ -75,6 +64,10 @@ object TestCase {
     properties.map { case TestProperty(name, value) =>
       responseString(name, value)
     }
+
+  def parameterString(name: String, value: String): String =
+    val input = inputValues.getOrElse(name, value)
+    s"${name}に\"${input}\"を設定する"
 
   def responseString(name: String, value: String): String =
     val output = outputValues.getOrElse(name, value)
