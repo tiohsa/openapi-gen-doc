@@ -155,8 +155,9 @@ object GenTestCase {
       name: String,
       example: Object | Null
   ): Option[TestProperty] =
-    if example == null then None
-    else Some(TestProperty(name, example.toString))
+//    if example == null then None
+//    else Some(TestProperty(name, s"${example}"))
+    Some(TestProperty(name, s"${example}"))
 
   def responsesOrDefault(
       responses: util.Map[String, ApiResponse] | Null,
