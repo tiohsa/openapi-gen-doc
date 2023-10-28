@@ -57,5 +57,7 @@ class GenTestCaseTest extends munit.FunSuite:
 //
   test("run") {
     val genTestCase = GenTestCase("openapi.yaml")
-    println(genTestCase.generate())
+    genTestCase.generate.foreach { testCase =>
+      println(s"${testCase}\n")
+    }
   }
