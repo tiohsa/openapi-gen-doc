@@ -114,8 +114,8 @@ object GenTestCase {
     if mediaType == null || isSkipContentType(name) then default
     else schemaOrDefault(None, mediaType.getSchema, default)
 
-  def isSkipContentType(contentType: String): Boolean =
-    contentType != "application/json"
+  def isSkipContentType(contentType: String): Boolean = false
+//    contentType != "application/json"
 
   def schemaOrDefault[T](
       name: Option[String],
@@ -123,7 +123,18 @@ object GenTestCase {
       default: List[TestProperty] = Nil
   ): List[TestProperty] =
     if schema == null then default
-    else propertiesOrDefault(name, schema.getProperties, default)
+    else {
+      schema match {
+        case x: ArraySchema => {
+          val name = getValueOrDefault(x.getName)
+          schemaOrDefault(name, x.getItems)
+        }
+        case _ => propertiesOrDefault(name, schema.getProperties, default)
+      }
+    }
+
+  def getValueOrDefault(value: String | Null): Option[String] =
+    if value == null then None else Some(value)
 
   def propertiesOrDefault(
       propertyName: Option[String],
@@ -137,12 +148,23 @@ object GenTestCase {
           case x: ObjectSchema => schemaOrDefault(Some(name), x)
           case x: ArraySchema  => schemaOrDefault(Some(name), x.getItems)
           case _ => {
-            val schemaName =
-              propertyName.map(s => s"${s}.${name}").getOrElse(name)
+            val schemaName = createPropertyNameofObject(propertyName, name)
             propertyOrDefault(schemaName, schema)
           }
         }
       }
+
+  def createPropertyNameofObject(
+      objectName: Option[String],
+      propertyName: String
+  ): String =
+    objectName.map(name => s"${name}.${propertyName}").getOrElse(propertyName)
+
+  def createPropertyNameofArray(
+      objectName: Option[String],
+      propertyName: String
+  ): String =
+    objectName.map(name => s"${name}.${propertyName}").getOrElse(propertyName)
 
   def propertyOrDefault(
       name: String,
