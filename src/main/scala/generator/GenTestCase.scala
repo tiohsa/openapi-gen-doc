@@ -2,7 +2,13 @@ package generator
 
 import io.swagger.parser.OpenAPIParser
 import io.swagger.v3.oas.models.{OpenAPI, Operation}
-import io.swagger.v3.oas.models.media.{Content, MediaType, Schema}
+import io.swagger.v3.oas.models.media.{
+  ArraySchema,
+  Content,
+  MediaType,
+  ObjectSchema,
+  Schema
+}
 import io.swagger.v3.oas.models.parameters.{Parameter, RequestBody}
 import io.swagger.v3.oas.models.responses.ApiResponse
 import io.swagger.v3.parser.core.models.ParseOptions
@@ -105,26 +111,37 @@ object GenTestCase {
       mediaType: MediaType,
       default: List[TestProperty] = Nil
   ): List[TestProperty] =
-    if mediaType == null then default
-    else schemaOrDefault(mediaType.getSchema, default)
+    if mediaType == null || isSkipContentType(name) then default
+    else schemaOrDefault(None, mediaType.getSchema, default)
+
+  def isSkipContentType(contentType: String): Boolean =
+    contentType != "application/json"
 
   def schemaOrDefault[T](
+      name: Option[String],
       schema: Schema[T] | Null,
       default: List[TestProperty] = Nil
   ): List[TestProperty] =
     if schema == null then default
-    else
-      val properties: util.Map[String, Schema[_]] | Null = schema.getProperties
-      propertiesOrDefault(properties, default)
+    else propertiesOrDefault(name, schema.getProperties, default)
 
   def propertiesOrDefault(
+      propertyName: Option[String],
       properties: util.Map[String, Schema[_]] | Null,
       default: List[TestProperty] = Nil
   ): List[TestProperty] =
     if properties == null then default
     else
       properties.asScala.toList.flatMap { (name, schema) =>
-        propertyOrDefault(name, schema)
+        schema match {
+          case x: ObjectSchema => schemaOrDefault(Some(name), x)
+          case x: ArraySchema  => schemaOrDefault(Some(name), x.getItems)
+          case _ => {
+            val schemaName =
+              propertyName.map(s => s"${s}.${name}").getOrElse(name)
+            propertyOrDefault(schemaName, schema)
+          }
+        }
       }
 
   def propertyOrDefault(
