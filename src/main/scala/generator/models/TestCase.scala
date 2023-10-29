@@ -6,8 +6,7 @@ case class TestCase(
     parameters: List[TestProperty],
     requestBody: List[TestProperty],
     responses: List[TestResponse],
-    codeInputValues: Map[String, Map[String, String]],
-    codeOutputValues: Map[String, Map[String, String]]
+    option: TestCaseOption
 ) {
   import TestCase.*
 
@@ -23,12 +22,11 @@ case class TestCase(
   private var outputValues: Map[String, String] = Map()
 
   def createTestCase(response: TestResponse): List[String] = {
-    inputValues = codeInputValues.getOrElse(response.code, Map())
-    outputValues = codeOutputValues.getOrElse(response.code, Map())
-    List(titleString, givenString, whenString, thenString(response))
-    //        if response.code == "200" then
-    //          List(titleString, givenString, whenString, thenString(response))
-    //        else Nil
+    inputValues = option.codeInputValues.getOrElse(response.code, Map())
+    outputValues = option.codeOutputValues.getOrElse(response.code, Map())
+    if option.filterCode.isEmpty || option.filterCode.contains(response.code)
+    then List(titleString, givenString, whenString, thenString(response))
+    else Nil
   }
 
   def givenString: String =
@@ -67,9 +65,11 @@ case class TestCase(
 
   def parameterString(name: String, value: String): String =
     val input = inputValues.getOrElse(name, value)
-    s"${name}に\"${input}\"を設定する"
+    val propertyName = option.propertyNames.getOrElse(name, name)
+    s"${propertyName}に\"${input}\"を設定する"
 
   def responseString(name: String, value: String): String =
     val output = outputValues.getOrElse(name, value)
-    s"${name}に\"${output}\"が返ること"
+    val propertyName = option.propertyNames.getOrElse(name, name)
+    s"${propertyName}に\"${output}\"が返ること"
 }

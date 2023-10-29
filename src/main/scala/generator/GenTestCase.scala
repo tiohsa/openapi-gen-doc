@@ -1,27 +1,19 @@
 package generator
 
+import generator.models.*
 import io.swagger.parser.OpenAPIParser
-import io.swagger.v3.oas.models.{OpenAPI, Operation}
-import io.swagger.v3.oas.models.media.{
-  ArraySchema,
-  Content,
-  MediaType,
-  ObjectSchema,
-  Schema
-}
+import io.swagger.v3.oas.models.media.*
 import io.swagger.v3.oas.models.parameters.{Parameter, RequestBody}
 import io.swagger.v3.oas.models.responses.ApiResponse
+import io.swagger.v3.oas.models.{OpenAPI, Operation}
 import io.swagger.v3.parser.core.models.ParseOptions
-import generator.models.*
 
 import java.util
-import scala.::
 import scala.jdk.CollectionConverters.*
 
 case class GenTestCase(
     url: String,
-    codeInputValues: Map[String, Map[String, String]],
-    codeOutputValues: Map[String, Map[String, String]]
+    option: TestCaseOption
 ) {
   import GenTestCase.*
 
@@ -78,8 +70,7 @@ case class GenTestCase(
           parameters,
           requestBody,
           responses,
-          codeInputValues,
-          codeOutputValues
+          option
         )
       )
 }

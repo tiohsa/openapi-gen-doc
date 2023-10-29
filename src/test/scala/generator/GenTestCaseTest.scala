@@ -2,81 +2,23 @@ package generator
 
 // For more information on writing tests, see
 // https://scalameta.org/munit/docs/getting-started.html
-import io.swagger.parser.OpenAPIParser
-import io.swagger.v3.oas.models.{Operation, PathItem}
-import io.swagger.v3.oas.models.media.{Content, MediaType, Schema}
-import io.swagger.v3.oas.models.parameters.{Parameter, RequestBody}
-import io.swagger.v3.oas.models.responses.{ApiResponse, ApiResponses}
-
-import scala.jdk.CollectionConverters.*
+import generator.models.{ReadCsv, TestCaseOption}
 
 class GenTestCaseTest extends munit.FunSuite:
 
-//  test("create test case title") {
-//    val title = GenTestCase.title("path", "GET")
-//    assertEquals(title, "GET pathのテスト")
-//  }
-//
-//  test("get method string") {
-//    val get = new Operation()
-//    val pathItem = new PathItem()
-//    pathItem.setGet(get)
-//    val method = GenTestCase.toGetMethodString(pathItem).get
-//    assertEquals(method, "GET")
-//  }
-//
-//  test("create parameter string") {
-//    val parameter = new Parameter()
-//    parameter.setName("param1")
-//    parameter.setDescription("パラメータ1")
-//    parameter.setExample("abc")
-//    val message = GenTestCase.parameterString(parameter)
-//    assertEquals(message, "param1に\"abc\"を設定する")
-//  }
-//
-//  test("create request body string") {
-//    val schema = new Schema()
-//    schema.setExample("abc")
-//    val message = GenTestCase.schemaString(schema)
-//    assertEquals(message, List("パラメータ1に\"abc\"を設定する"))
-//  }
-//
-//  test("create execute string") {
-//    val operation = new Operation()
-//    val message = GenTestCase.toExecuteString("/path1", "GET")
-//    assertEquals(message, "GET /path1を実行する")
-//  }
-//
-//  test("create result string") {
-//    val responses = new ApiResponses()
-//    val response = new ApiResponse()
-//    responses.addApiResponse("200", response)
-//    val message = GenTestCase.toReulst("200", response)
-//    assertEquals(message, "ステータスコード200が返ること")
-//  }
-//
   test("run") {
-    val codeInputValues: Map[String, Map[String, String]] = Map(
-      "200" -> Map(
-        ("tags" -> "tags_200"),
-        ("limit" -> "limit_200")
-      ),
-      "405" -> Map(
-        ("id" -> "id_405"),
-        ("limit" -> "limit_405")
-      )
-    )
-
-    val codeOutputValues: Map[String, Map[String, String]] = Map(
-      "200" -> Map(
-        ("name" -> "name_200"),
-        ("tag" -> "tag_200"),
-        ("id" -> "id_200")
-      )
-    )
+    val testData = ReadCsv.readPropertyValues("test-property-values.csv")
+    val names = ReadCsv.readPropertyNames("test-property-names.csv")
     val file = "openapi.yaml"
 //    val file = "api-with-examples.yaml"
-    val genTestCase = GenTestCase(file, codeInputValues, codeOutputValues)
+    val option = TestCaseOption(
+      testData.input,
+      testData.output,
+      Seq("200"),
+      names
+    )
+    val genTestCase =
+      GenTestCase(file, option)
     genTestCase.generate.foreach { testCase =>
       println(s"${testCase}\n")
     }
