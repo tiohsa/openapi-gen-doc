@@ -43,8 +43,8 @@ case class GenTestCase(
       .map { (path, pathItem) =>
         {
           TestCases(
-            createTestCase(path, "Get", pathItem.getGet),
             createTestCase(path, "Post", pathItem.getPost),
+            createTestCase(path, "Get", pathItem.getGet),
             createTestCase(path, "Put", pathItem.getPut),
             createTestCase(path, "Delete", pathItem.getDelete)
           )
@@ -84,7 +84,11 @@ object GenTestCase {
     if parameters == null then default
     else
       parameters.asScala.toList.flatMap { parameter =>
-        exampleOrDefault(parameter.getName, parameter.getExample)
+        exampleOrDefault(
+          parameter.getName,
+          parameter.getExample,
+          parameter.getRequired
+        )
       }
 
   def requestBodyOrDefault(
@@ -171,15 +175,25 @@ object GenTestCase {
       property: Schema[_] | Null
   ): Option[TestProperty] =
     if property == null then None
-    else exampleOrDefault(name, property.getExample)
+    else {
+      val required: List[String] =
+        if property.getRequired == null then Nil
+        else property.getRequired.asScala.toList
+      exampleOrDefault(
+        name,
+        property.getExample,
+        required.contains(name)
+      )
+    }
 
   def exampleOrDefault(
       name: String,
-      example: Object | Null
+      example: Object | Null,
+      required: Boolean
   ): Option[TestProperty] =
 //    if example == null then None
 //    else Some(TestProperty(name, s"${example}"))
-    Some(TestProperty(name, s"${example}"))
+    Some(TestProperty(name, s"${example}", required))
 
   def responsesOrDefault(
       responses: util.Map[String, ApiResponse] | Null,

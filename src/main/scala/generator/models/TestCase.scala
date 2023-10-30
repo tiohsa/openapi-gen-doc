@@ -24,20 +24,49 @@ case class TestCase(
   def createTestCase(response: TestResponse): List[String] = {
     inputValues = option.codeInputValues.getOrElse(response.code, Map())
     outputValues = option.codeOutputValues.getOrElse(response.code, Map())
-    if option.filterCode.isEmpty || option.filterCode.exists(f =>
-        f(response.code.toInt)
-      )
-    then List(titleString, givenString, whenString, thenString(response))
-    else Nil
+
+    if option.filterCode.isEmpty || option.filterCode.exists { f =>
+        response.code.toIntOption.exists(f(_))
+      }
+    then {
+      if option.isCombination then {
+        combinationParameters(this.parameters).flatMap { parameters =>
+          List(
+            titleString,
+            givenString(parameters),
+            whenString,
+            thenString(response)
+          )
+        }
+      } else {
+        List(
+          titleString,
+          givenString(this.parameters),
+          whenString,
+          thenString(response)
+        )
+
+      }
+    } else Nil
   }
 
-  def givenString: String =
-    val givenParameters = this.parameters.map {
-      case TestProperty(name, value) =>
-        parameterString(name, value)
+  def combinationParameters(
+      parameters: List[TestProperty]
+  ): List[List[TestProperty]] = {
+    val results = parameters.zipWithIndex.map { (parameter, index) =>
+      (parameter :: parameters.drop(index + 1) ++ parameters.filter(
+        _.required
+      )).distinct.sortBy(_.name)
+    }
+    results
+  }
+
+  def givenString(parameters: List[TestProperty]): String =
+    val givenParameters = parameters.map { case TestProperty(name, value, _) =>
+      parameterString(name, value)
     }
     val givenRequestBody = this.requestBody.map {
-      case TestProperty(name, value) =>
+      case TestProperty(name, value, _) =>
         parameterString(name, value)
     }
     (givenParameters ++ givenRequestBody).mkString("\n")
@@ -61,7 +90,7 @@ case class TestCase(
   def responsesString(
       properties: List[TestProperty]
   ): List[String] =
-    properties.map { case TestProperty(name, value) =>
+    properties.map { case TestProperty(name, value, _) =>
       responseString(name, value)
     }
 
