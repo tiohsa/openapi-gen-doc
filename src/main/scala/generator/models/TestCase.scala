@@ -24,7 +24,9 @@ case class TestCase(
   def createTestCase(response: TestResponse): List[String] = {
     inputValues = option.codeInputValues.getOrElse(response.code, Map())
     outputValues = option.codeOutputValues.getOrElse(response.code, Map())
-    if option.filterCode.isEmpty || option.filterCode.contains(response.code)
+    if option.filterCode.isEmpty || option.filterCode.exists(f =>
+        f(response.code.toInt)
+      )
     then List(titleString, givenString, whenString, thenString(response))
     else Nil
   }

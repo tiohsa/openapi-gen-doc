@@ -11,10 +11,11 @@ class GenTestCaseTest extends munit.FunSuite:
     val names = ReadCsv.readPropertyNames("test-property-names.csv")
     val file = "openapi.yaml"
 //    val file = "api-with-examples.yaml"
+    val isOk = (code: Int) => 200 <= code && code < 300
     val option = TestCaseOption(
       testData.input,
       testData.output,
-      Seq("200"),
+      Seq(isOk),
       names
     )
     val genTestCase =

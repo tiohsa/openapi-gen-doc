@@ -11,7 +11,7 @@ import java.io.{File, FileOutputStream, PrintWriter}
   val option = TestCaseOption(
     testData.input,
     testData.output,
-    Seq("200"),
+    Seq((code: Int) => 200 <= code && code < 300),
     propertyNames
   )
   val genTestCase =
