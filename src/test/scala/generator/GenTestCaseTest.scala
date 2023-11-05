@@ -19,7 +19,8 @@ class GenTestCaseTest extends munit.FunSuite:
       names
     )
     val genTestCase =
-      GenTestCase(file, option)
+      GenTestCase(file)
+//      GenTestCase(file, option)
     genTestCase.generate.foreach { testCase =>
       println(s"${testCase}\n")
     }

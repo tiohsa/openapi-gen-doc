@@ -1,0 +1,29 @@
+@(
+ method: String,
+ path: String,
+ parameters: List[generator.models.TestProperty],
+ requestBody: List[generator.models.TestProperty],
+ response: generator.models.TestResponse,
+ option: generator.models.TestCaseOption
+ )
+
+@displayName(name: String) = {@option.propertyNames.getOrElse(name, name)}
+
+@displayInputValue(name: String, value: String) = {@option.inputValues(response.code).getOrElse(name, value)}
+
+@displayOutputValue(name: String, value: String) = {@option.outputValues(response.code).getOrElse(name, value)}
+
+## @method @(path)のテスト
+@parameters.map { testProperty =>
+@displayName(testProperty.name)に"@displayInputValue(testProperty.name, testProperty.value)"を設定する
+}
+
+@requestBody.map { testProperty =>
+@displayName(testProperty.name)に"@displayInputValue(testProperty.name, testProperty.value)"を設定する
+}
+
+ステータスコード"@(response.code)"が返ること
+
+@response.properties.map { testProperty  =>
+@displayName(testProperty.name)に"@displayOutputValue(testProperty.name, testProperty.value)"が返ること
+}

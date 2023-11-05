@@ -12,8 +12,7 @@ import java.util
 import scala.jdk.CollectionConverters.*
 
 case class GenTestCase(
-    url: String,
-    option: TestCaseOption
+    url: String
 ) {
   import GenTestCase.*
 
@@ -38,8 +37,7 @@ case class GenTestCase(
 
   def openapi: OpenAPI = read(url).get
   def generate: List[TestCases] = {
-//    println(openapi)
-    val result = openapi.getPaths.asScala.toList
+    openapi.getPaths.asScala.toList
       .map { (path, pathItem) =>
         {
           TestCases(
@@ -50,29 +48,27 @@ case class GenTestCase(
           )
         }
       }
-    result
   }
 
   def createTestCase(
       path: String,
       method: String,
       operation: Operation | Null
-  ): Option[TestCase] =
-    if operation == null then None
+  ): List[TestCase] =
+    if operation == null then Nil
     else
       val parameters = parametersOrDefault(operation.getParameters)
       val requestBody = requestBodyOrDefault(operation.getRequestBody)
       val responses = responsesOrDefault(operation.getResponses)
-      Some(
+      responses.map { response =>
         TestCase(
           method,
           path,
           parameters,
           requestBody,
-          responses,
-          option
+          response
         )
-      )
+      }
 }
 
 object GenTestCase {

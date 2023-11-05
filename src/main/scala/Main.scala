@@ -1,4 +1,4 @@
-import generator.GenTestCase
+import generator.{GenTestCase, GenTestCaseTemplate}
 import generator.models.{ReadCsv, TestCaseOption}
 
 import java.io.{File, FileOutputStream, PrintWriter}
@@ -11,19 +11,27 @@ import java.io.{File, FileOutputStream, PrintWriter}
   val option = TestCaseOption(
     testData.input,
     testData.output,
-    Seq((code: Int) => 200 <= code && code < 300),
+    Nil,
+//    Seq((code: Int) => 200 <= code && code < 300),
     propertyNames
   )
-  val genTestCase =
-    GenTestCase(file, option)
+//  val genTestCase =
+  val testCasesList = GenTestCase(file).generate
+  val template = GenTestCaseTemplate.generate(testCasesList, option)
+  println(template)
+//  testcasesList.map { testcases =>
+//    testcases.getMethod.map { testcase =>
+//      GenTestCaseTemplate.generate(testcase, option)
+//    }
+//  }
 
-  var writer: PrintWriter | Null = null
-  try
-    writer = new PrintWriter(new FileOutputStream(new File("output.csv")))
-    genTestCase.generate.foreach { testCase =>
-      println(s"${testCase}\n")
-      writer.write(s"${testCase}\n")
-    }
-  catch case e => throw e
-  finally writer.close()
+//  var writer: PrintWriter | Null = null
+//  try
+//    writer = new PrintWriter(new FileOutputStream(new File("output.csv")))
+//    genTestCase.generate.foreach { testCase =>
+//      println(s"${testCase}\n")
+//      writer.write(s"${testCase}\n")
+//    }
+//  catch case e => throw e
+//  finally writer.close()
 }
